@@ -11,3 +11,12 @@ function ageInDays(){
 function reset(){
     document.getElementById('ageInDays').remove();
 }
+
+// Challenge 2: Cat Generator
+function generateCat(){
+    var image = document.createElement('img');
+    var div = document.getElementById('flex-cat-gen');
+    image.src = "static/images/big-mouth-cat.gif";
+    image.style = "height: 130px; width: 180px";
+    div.appendChild(image);
+}
