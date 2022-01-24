@@ -147,10 +147,16 @@ function buttonsRandom(){
 
 
 // Challenge 5: Blackjack
+// 블랙잭 게임 
 let blackjackGame = {
     'you': {'scoreSpan': '#your-blackjack-result','div':'#your-box','score':0},
     'dealer': {'scoreSpan': '#dealer-blackjack-result','div':'#dealer-box','score':0},
-    'cards':['2','3','4','5','6','7','8','9','10','K','J','Q','A']
+    'cards':['2','3','4','5','6','7','8','9','10','K','J','Q','A'],
+    "cardsMap": {'A': [1, 11], '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10},
+    'wins':0,
+    'draws':0,
+    'losses':0,
+
 };
 
 const YOU = blackjackGame['you'];
@@ -158,20 +164,89 @@ const DEALER = blackjackGame['dealer'];
 
 const hitSound = new Audio('static/sounds/swish.m4a');
 
+// querySelector로 버튼리스너 생성
 document.querySelector('#blackjack-hit-button').addEventListener('click',blackjackHit);
 document.querySelector('#blackjack-deal-button').addEventListener('click',blackjackDeal);
+document.querySelector('#blackjack-stand-button').addEventListener('click',blackjackStand);
 
-function blackjackHit(){
-    let card = randomCard();
-    console.log(card);
-    showCard(YOU,card);
+// stand 버튼 기능 
+function blackjackStand(){
+    // 딜러가 16점 이하면 랜덤 카드를 받음
+    while(DEALER['score'] < 16 ){
+        let card = randomCard();
+        showCard(DEALER,card);
+        updateScore(DEALER,card);
+        showScore(DEALER);
+    }
+    // 결과 표시
+    showResult(computerWinner());
+    
 }
 
+// 승자 계산
+function computerWinner(){
+    let winner;
+    // 유저 점수가 21점 이하
+    if (YOU['score'] <= 21){
+        // 유저점수가 딜러점수보다 높거나 딜러가 bust가 아니라면
+        if (YOU['score'] > DEALER['score'] || DEALER['score'] >21) {
+            winner = YOU;
+        } else if (YOU['score'] < DEALER['score']){ // 딜러보다 점수가 낮다면
+            winner = DEALER;
+        }
+    } else if (YOU['score'] > 21 && DEALER['score'] <= 21){ // 유저가 bust 고 딜러가 21점 이하라면
+        winner = DEALER;
+    }
+    
+    return winner;
+}
+
+// 결과 표시
+function showResult(winner){
+    resultSpan = document.querySelector('#blackjack-result');
+    if(winner == YOU){
+        resultSpan.textContent = '이겼습니다! :D';
+        resultSpan.style.color = 'green';
+        const cash = new Audio('static/sounds/cash.mp3');
+        cash.play();
+        blackjackGame['wins']++;
+    } else if(winner = DEALER){
+        resultSpan.textContent = '졌습니다 T^T';
+        resultSpan.style.color = 'red';
+        const aww = new Audio('static/sounds/aww.mp3');
+        aww.play();
+        blackjackGame['losses']++;
+    } else {
+        resultSpan.textContent = '비겼습니다!';
+        resultSpan.style.color = 'white';
+        blackjackGame['draws']++;
+    }
+}
+
+// hit 버튼 기능
+function blackjackHit(){
+    resultSpan = document.querySelector('#blackjack-result');
+    if(YOU['score'] <= 21){
+        let card = randomCard();
+        showCard(YOU,card);
+        updateScore(YOU,card);
+        showScore(YOU);
+    } else {
+        resultSpan.textContent = '졌습니다 T^T';
+        resultSpan.style.color = 'red';
+        const aww = new Audio('static/sounds/aww.mp3');
+        aww.play();
+        blackjackGame['losses']++;
+    }
+}
+
+// 랜덤카드 생성
 function randomCard(){
     let randomIndex = Math.floor(Math.random() * 13);
     return blackjackGame['cards'][randomIndex];
 }
 
+// 카드 표현
 function showCard(activePlayer, card){
     let cardImage = document.createElement('img');
     cardImage.src = 'static/images/'+ card +'.png';
@@ -179,7 +254,11 @@ function showCard(activePlayer, card){
     hitSound.play();
 }
 
+// Deal버튼 기능
 function blackjackDeal(){
+    document.querySelector('#blackjack-result').textContent = 'Let\'s Play';
+    document.querySelector('#blackjack-result').style.color = '#212529';
+
     let yourImages = document.querySelector('#your-box').querySelectorAll('img');
     let dealerImages = document.querySelector('#dealer-box').querySelectorAll('img');
 
@@ -189,6 +268,48 @@ function blackjackDeal(){
     
     for(i=0; i<dealerImages.length; i++){
         dealerImages[i].remove();
+    }
+
+    YOU['score'] = 0;
+    DEALER['score'] = 0;
+    
+    document.querySelector('#your-blackjack-result').textContent = 0;
+    document.querySelector('#dealer-blackjack-result').textContent = 0;
+
+    document.querySelector('#your-blackjack-result').style.color = 'white';
+    document.querySelector('#dealer-blackjack-result').style.color = 'white';
+}
+
+// 점수 테이블 
+function updateTable(){
+    let wins = document.querySelector('#wins');
+    let losses = document.querySelector('#losses');
+    let draws = document.querySelector('#draws');
+
+    wins.textContent = blackjackGame['wins'];
+    losses.textContent = blackjackGame['losses'];
+    draws.textContent = blackjackGame['draws'];
+}
+
+function updateScore(activePlayer, card){
+    if(card === 'A'){
+    // 11을 더해도 21을 넘지 않는다면 11을 더하고 나머지 경우는 1을 더한다.
+        if (activePlayer['score'] + blackjackGame['cardsMap'][card][1] <= 21){
+            activePlayer['score'] += blackjackGame['cardsMap'][card][1];
+        } else {
+            activePlayer['score'] += blackjackGame['cardsMap'][card][0];
+        }
+    } else {
+        activePlayer['score'] += blackjackGame['cardsMap'][card];
+    }
+}
+
+function showScore(activePlayer){
+    if(activePlayer['score'] > 21) {
+        document.querySelector(activePlayer['scoreSpan']).textContent = 'BUST!';
+        document.querySelector(activePlayer['scoreSpan']).style.color = 'red';
+    } else {
+        document.querySelector(activePlayer['scoreSpan']).textContent = activePlayer['score'];
     }
 }
 
