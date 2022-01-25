@@ -180,7 +180,7 @@ function blackjackStand(){
     }
     // 결과 표시
     showResult(computerWinner());
-    
+    gameEnd();
 }
 
 // 승자 계산
@@ -210,7 +210,7 @@ function showResult(winner){
         const cash = new Audio('static/sounds/cash.mp3');
         cash.play();
         blackjackGame['wins']++;
-    } else if(winner = DEALER){
+    } else if(winner == DEALER){
         resultSpan.textContent = '졌습니다 T^T';
         resultSpan.style.color = 'red';
         const aww = new Audio('static/sounds/aww.mp3');
@@ -231,13 +231,39 @@ function blackjackHit(){
         showCard(YOU,card);
         updateScore(YOU,card);
         showScore(YOU);
+        if(YOU['score'] > 21){
+            loseEffect();
+        }
     } else {
-        resultSpan.textContent = '졌습니다 T^T';
+        loseEffect();
+    }
+}
+
+function loseEffect(){
+    resultSpan.textContent = '졌습니다 T^T';
         resultSpan.style.color = 'red';
         const aww = new Audio('static/sounds/aww.mp3');
         aww.play();
         blackjackGame['losses']++;
-    }
+        gameEnd();
+}
+
+function gameEnd(){
+    document.querySelector('#blackjack-hit-button').removeEventListener('click',blackjackHit);
+    document.querySelector('#blackjack-stand-button').removeEventListener('click',blackjackStand);
+    document.querySelector('#blackjack-hit-button').addEventListener('click',endAlert);
+    document.querySelector('#blackjack-stand-button').addEventListener('click',endAlert);
+}
+
+function gameStart(){
+    document.querySelector('#blackjack-hit-button').removeEventListener('click',endAlert);
+    document.querySelector('#blackjack-stand-button').removeEventListener('click',endAlert);
+    document.querySelector('#blackjack-hit-button').addEventListener('click',blackjackHit);
+    document.querySelector('#blackjack-stand-button').addEventListener('click',blackjackStand);
+}
+
+function endAlert(){
+    alert("게임이 끝났습니다.\nDeal 버튼을 눌러주세요");
 }
 
 // 랜덤카드 생성
@@ -278,6 +304,8 @@ function blackjackDeal(){
 
     document.querySelector('#your-blackjack-result').style.color = 'white';
     document.querySelector('#dealer-blackjack-result').style.color = 'white';
+
+    gameStart();
 }
 
 // 점수 테이블 
