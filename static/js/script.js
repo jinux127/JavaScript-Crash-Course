@@ -253,6 +253,7 @@ function gameEnd(){
     document.querySelector('#blackjack-stand-button').removeEventListener('click',blackjackStand);
     document.querySelector('#blackjack-hit-button').addEventListener('click',endAlert);
     document.querySelector('#blackjack-stand-button').addEventListener('click',endAlert);
+    updateTable();
 }
 
 function gameStart(){
